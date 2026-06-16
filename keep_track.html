@@ -260,8 +260,90 @@
 <body>
 <div id="app">
 
+  <!-- REGISTRO -->
+  <div id="s-registro" class="screen active">
+    <div class="info-box">
+      <h2>¡Hola! 👋</h2>
+      <p>Antes de empezar, escribe tus <strong>iniciales</strong> y dinos en qué <strong>curso</strong> estás.</p>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:14px;font-weight:bold;color:#444;display:block;margin-bottom:6px;">
+        Tus iniciales (primera letra de tu nombre y apellidos)
+      </label>
+      <input id="input-iniciales" type="text" maxlength="5"
+        placeholder="Ejemplo: A.G.M."
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        style="width:100%;padding:14px;font-size:22px;text-align:center;
+               border:1.5px solid #ddd;border-radius:8px;font-family:Arial,sans-serif;
+               text-transform:uppercase;letter-spacing:4px;">
+      <p style="font-size:12px;color:#888;margin-top:6px;">
+        Por ejemplo, si te llamas Ana García Martínez → escribe AGM
+      </p>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:14px;font-weight:bold;color:#444;display:block;margin-bottom:10px;">
+        ¿En qué curso estás?
+      </label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="curso-btn" data-curso="3º Primaria"
+          onclick="selectCurso(this)"
+          style="padding:16px;font-size:16px;font-family:Arial,sans-serif;
+                 background:#fff;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;">
+          3º Primaria
+        </button>
+        <button class="curso-btn" data-curso="4º Primaria"
+          onclick="selectCurso(this)"
+          style="padding:16px;font-size:16px;font-family:Arial,sans-serif;
+                 background:#fff;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;">
+          4º Primaria
+        </button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <label style="font-size:14px;font-weight:bold;color:#444;display:block;margin-bottom:10px;">
+        ¿En qué grupo estás?
+      </label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+        <button class="grupo-btn" data-grupo="A"
+          onclick="selectGrupo(this)"
+          style="padding:14px;font-size:20px;font-weight:bold;font-family:Arial,sans-serif;
+                 background:#fff;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;">
+          A
+        </button>
+        <button class="grupo-btn" data-grupo="B"
+          onclick="selectGrupo(this)"
+          style="padding:14px;font-size:20px;font-weight:bold;font-family:Arial,sans-serif;
+                 background:#fff;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;">
+          B
+        </button>
+        <button class="grupo-btn" data-grupo="C"
+          onclick="selectGrupo(this)"
+          style="padding:14px;font-size:20px;font-weight:bold;font-family:Arial,sans-serif;
+                 background:#fff;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;">
+          C
+        </button>
+        <button class="grupo-btn" data-grupo="D"
+          onclick="selectGrupo(this)"
+          style="padding:14px;font-size:20px;font-weight:bold;font-family:Arial,sans-serif;
+                 background:#fff;border:1.5px solid #ddd;border-radius:8px;cursor:pointer;">
+          D
+        </button>
+      </div>
+    </div>
+
+    <button class="btn" id="btn-registro" disabled onclick="confirmRegistro()">
+      ¡Vamos a empezar! →
+    </button>
+    <p style="font-size:12px;color:#aaa;text-align:center;margin-top:10px;">
+      Rellena los tres campos para continuar
+    </p>
+  </div>
+
   <!-- INTRO -->
-  <div id="s-intro" class="screen active">
+  <div id="s-intro" class="screen">
     <div class="info-box">
       <h2>Tarea de memoria</h2>
       <p>Vas a ver palabras que aparecen una a una en la pantalla. Cada palabra pertenece a una <strong>categoría</strong>: animales, colores, frutas, ropa o muebles.</p>
@@ -339,8 +421,13 @@
       <p style="margin:0;color:#555;">Muchas gracias por tu esfuerzo.</p>
     </div>
     <div class="stat-grid" id="stat-grid"></div>
-    <button class="download-btn" onclick="downloadCSV()">⬇ Descargar mis resultados (CSV)</button>
-    <div class="note">Los datos se descargan automáticamente en tu ordenador. Entrégaselos al investigador/a.</div>
+    <button class="download-btn" onclick="downloadCSV()" style="margin-top:4px;">
+      ⬇ Guardar resultados
+    </button>
+    <div class="note" style="margin-top:12px;">
+      Al pulsar el botón se descargará un archivo en este ordenador con los resultados.
+      <strong>No cierres esta pantalla hasta que veas que el archivo se ha descargado.</strong>
+    </div>
   </div>
 
 </div>
@@ -354,7 +441,9 @@
 ============================================================ */
 
 /* ── Metadatos del participante (se rellenan por URL o prompt) ── */
-var PARTICIPANT_ID = new URLSearchParams(window.location.search).get('id') || 'P' + Date.now();
+var PARTICIPANT_ID = 'anonimo';
+var PARTICIPANT_CURSO = '';
+var PARTICIPANT_GRUPO = '';
 var SESSION_DATE   = new Date().toISOString().slice(0,10);
 
 /* ── Estímulos ── */
@@ -405,9 +494,55 @@ var R={free:{correct:0,items:0,intrusions:0},rec:{correct:0,items:0},trials:[]};
 /* ── Utilidades ── */
 function el(id){return document.getElementById(id);}
 function show(id){
-  ['s-intro','s-trans','s-task','s-free','s-rec','s-fb','s-end'].forEach(function(s){
+  ['s-registro','s-intro','s-trans','s-task','s-free','s-rec','s-fb','s-end'].forEach(function(s){
     el(s).className='screen'+(s===id?' active':'');
   });
+}
+
+/* ── Registro de participante ── */
+function selectCurso(btn) {
+  document.querySelectorAll('.curso-btn').forEach(function(b) {
+    b.style.background  = '#fff';
+    b.style.borderColor = '#ddd';
+    b.style.color       = '#222';
+    b.style.fontWeight  = 'normal';
+  });
+  btn.style.background  = '#e8e8ff';
+  btn.style.borderColor = '#4a52c7';
+  btn.style.color       = '#3a3fa0';
+  btn.style.fontWeight  = 'bold';
+  PARTICIPANT_CURSO = btn.dataset.curso;
+  checkRegistro();
+}
+
+function selectGrupo(btn) {
+  document.querySelectorAll('.grupo-btn').forEach(function(b) {
+    b.style.background  = '#fff';
+    b.style.borderColor = '#ddd';
+    b.style.color       = '#222';
+    b.style.fontWeight  = 'normal';
+  });
+  btn.style.background  = '#e8e8ff';
+  btn.style.borderColor = '#4a52c7';
+  btn.style.color       = '#3a3fa0';
+  btn.style.fontWeight  = 'bold';
+  PARTICIPANT_GRUPO = btn.dataset.grupo;
+  checkRegistro();
+}
+
+function checkRegistro() {
+  var iniciales = el('input-iniciales').value.trim();
+  var ok = iniciales.length >= 2 && PARTICIPANT_CURSO !== '' && PARTICIPANT_GRUPO !== '';
+  var btn = el('btn-registro');
+  btn.disabled = !ok;
+  btn.style.background = ok ? '#4a52c7' : '#ccc';
+  btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+}
+
+function confirmRegistro() {
+  var iniciales = el('input-iniciales').value.trim().toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ]/g,'');
+  PARTICIPANT_ID = iniciales + '_' + PARTICIPANT_CURSO.replace(/[^0-9]/g,'') + PARTICIPANT_GRUPO + '_' + SESSION_DATE;
+  show('s-intro');
 }
 function buildSeq(cats,len){
   var pools={},idx={},seq=[],i;
@@ -427,6 +562,12 @@ function animTimer(){
 }
 
 /* ── Inicio ── */
+/* Listener para iniciales */
+document.addEventListener('DOMContentLoaded', function() {
+  var inp = el('input-iniciales');
+  if (inp) inp.addEventListener('input', checkRegistro);
+});
+
 function startTask(){S.ti=0;beginTrial();}
 
 function beginTrial(){
@@ -602,6 +743,8 @@ function endTask(){
 
   FINAL={
     participant_id:       PARTICIPANT_ID,
+    curso:                PARTICIPANT_CURSO,
+    grupo:                PARTICIPANT_GRUPO,
     fecha:                SESSION_DATE,
     KT_free_accuracy_pct: fA,
     KT_rec_accuracy_pct:  rA,
@@ -623,9 +766,11 @@ function endTask(){
 
   show('s-end');
   updateProg();
+  /* Descarga automática al terminar */
+  setTimeout(downloadCSV, 800);
 }
 
-function downloadCSV(){
+function downloadCSV() {
   var keys=Object.keys(FINAL);
   var header=keys.join(',');
   var row=keys.map(function(k){
@@ -633,7 +778,7 @@ function downloadCSV(){
     if(v.indexOf(',')!==-1||v.indexOf('"')!==-1)v='"'+v.replace(/"/g,'""')+'"';
     return v;
   }).join(',');
-  var csv='\uFEFF'+header+'\n'+row; /* BOM para Excel */
+  var csv='\uFEFF'+header+'\n'+row;
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
